@@ -14,6 +14,8 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.os.Handler;
+import android.widget.Toast;
+
 import java.util.List;
 
 public class SongPlayer extends Fragment {
@@ -45,6 +47,12 @@ public class SongPlayer extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         this.view = view;
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(requireContext(),"click",Toast.LENGTH_SHORT).show();
+            }
+        });
         startActivity(song);
         super.onViewCreated(view, savedInstanceState);
     }
@@ -52,19 +60,6 @@ public class SongPlayer extends Fragment {
     private void startActivity(Song song){
         TextView tw = view.findViewById(R.id.fragment_song_name);
         tw.setText(song.getName());
-        ImageButton play_stop_ib = view.findViewById(R.id.fragment_play_stop);
-        play_stop_ib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying()){
-                    pauseAudio();
-                    play_stop_ib.setImageResource(R.drawable.baseline_play_arrow_24);
-                }else{
-                    resumeAudio();
-                    play_stop_ib.setImageResource(R.drawable.baseline_stop_24);
-                }
-            }
-        });
 
         seekBar = view.findViewById(R.id.fragment_seek_bar);
         seekBar.setMax(mediaPlayer.getDuration());
@@ -92,11 +87,26 @@ public class SongPlayer extends Fragment {
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     seekBar.setProgress(mediaPlayer.getCurrentPosition());
                     tvCurrentTime.setText(formatTime(mediaPlayer.getCurrentPosition()));
-                    handler.postDelayed(this, 500);
+                    handler.postDelayed(this, 1000);
                 }
             }
         };
         handler.postDelayed(updateSeekBar, 1000);
+
+        ImageButton play_stop_ib = view.findViewById(R.id.fragment_play_stop);
+        play_stop_ib.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mediaPlayer.isPlaying()){
+                    pauseAudio();
+                    play_stop_ib.setImageResource(R.drawable.baseline_play_arrow_24);
+                }else{
+                    resumeAudio();
+                    handler.postDelayed(updateSeekBar, 1000);
+                    play_stop_ib.setImageResource(R.drawable.baseline_stop_24);
+                }
+            }
+        });
 
         ImageButton next_ib = view.findViewById(R.id.fragment_next);
         next_ib.setOnClickListener(new View.OnClickListener() {
@@ -153,7 +163,7 @@ public class SongPlayer extends Fragment {
         }catch (Exception e){}
     }
     public void nextAudio(){
-        if (current < Songs.size()) {
+        if (current < Songs.size() - 1) {
             current++;
             song = Songs.get(current);
             playAudio(song);

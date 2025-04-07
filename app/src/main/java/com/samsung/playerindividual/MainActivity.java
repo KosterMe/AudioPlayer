@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
                 String extension = name.substring(name.length()-3);
                 if (extension.equals("mp3"))
-                    arr.add(new Song(name.substring(0,name.length()-4),path));
+                    arr.add(new Song(name.substring(0,name.length() - 4),path));
             }
             cursor.close();
         }
