@@ -1,5 +1,6 @@
 package com.samsung.playerindividual;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.os.Handler;
@@ -19,20 +21,21 @@ import android.widget.Toast;
 import java.util.List;
 
 public class SongPlayer extends Fragment {
-    private MediaPlayer mediaPlayer;
+    private static final int EPS = 1500;
     private Song song;
     private List<Song> Songs;
     private Player mp;
-    private int current;
     private SeekBar seekBar;
     private TextView tvCurrentTime;
     private Handler handler = new Handler();
+    private int current;
     View view;
-    public SongPlayer(List<Song> Songs,int current) {
+
+    public SongPlayer(List<Song> Songs, int current) {
         this.Songs = Songs;
         this.current = current;
         this.song = Songs.get(current);
-        playAudio(song);
+
     }
 
     @Override
@@ -47,61 +50,86 @@ public class SongPlayer extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         this.view = view;
+
+        mp = new Player(current, Songs);
+        startActivity(song);
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(requireContext(),"click",Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "click", Toast.LENGTH_SHORT).show();
             }
         });
-        startActivity(song);
         super.onViewCreated(view, savedInstanceState);
     }
 
-    private void startActivity(Song song){
+    private void startActivity(Song song) {
+        mp.stopAudio();
+        mp.playAudio(song);
+
         TextView tw = view.findViewById(R.id.fragment_song_name);
         tw.setText(song.getName());
 
+        TextView artist = view.findViewById(R.id.fragment_song_artist);
+        artist.setText(song.getArtist());
+
+        ImageView iw = view.findViewById(R.id.fragment_image);
+        if (song.getAlbumBitmap() != null) {
+            iw.setImageBitmap(song.getAlbumBitmap());
+        } else {
+            iw.setImageResource(R.drawable.default_image_for_item);
+        }
+
         seekBar = view.findViewById(R.id.fragment_seek_bar);
-        seekBar.setMax(mediaPlayer.getDuration());
+        seekBar.setMax(mp.getTotalTime());
         tvCurrentTime = view.findViewById(R.id.current_time);
         TextView tvTotalTime = view.findViewById(R.id.total_time);
-        tvTotalTime.setText(formatTime(mediaPlayer.getDuration()));
+        tvTotalTime.setText(formatTime(mp.getTotalTime()));
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    mediaPlayer.seekTo(progress);
-                }
                 tvCurrentTime.setText(formatTime(progress));
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (seekBar.getProgress() >= mp.getTotalTime() - EPS) {
+                    mp.nextAudio();
+                    startActivity(mp.getSong());
+                } else {
+                    mp.SeekTo(seekBar.getProgress());
+                }
+            }
         });
         Runnable updateSeekBar = new Runnable() {
             @Override
             public void run() {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
-                    tvCurrentTime.setText(formatTime(mediaPlayer.getCurrentPosition()));
+                if (mp.getMediaPlayer() != null && mp.IsPlaying()) {
+                    seekBar.setProgress(mp.GetCurrentPosition());
+                    tvCurrentTime.setText(formatTime(mp.GetCurrentPosition()));
                     handler.postDelayed(this, 1000);
+                    if (mp.GetCurrentPosition() >= mp.getTotalTime() - EPS) {
+                        mp.nextAudio();
+                        startActivity(mp.getSong());
+                    }
                 }
             }
         };
         handler.postDelayed(updateSeekBar, 1000);
 
         ImageButton play_stop_ib = view.findViewById(R.id.fragment_play_stop);
+        play_stop_ib.setImageResource(R.drawable.baseline_stop_24);
         play_stop_ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mediaPlayer.isPlaying()){
-                    pauseAudio();
+                if (mp.IsPlaying()) {
+                    mp.pauseAudio();
                     play_stop_ib.setImageResource(R.drawable.baseline_play_arrow_24);
-                }else{
-                    resumeAudio();
+                } else {
+                    mp.resumeAudio();
                     handler.postDelayed(updateSeekBar, 1000);
                     play_stop_ib.setImageResource(R.drawable.baseline_stop_24);
                 }
@@ -112,14 +140,16 @@ public class SongPlayer extends Fragment {
         next_ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                nextAudio();
+                mp.nextAudio();
+                startActivity(mp.getSong());
             }
         });
         ImageButton last_ib = view.findViewById(R.id.fragment_last);
         last_ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                lastAudio();
+                mp.lastAudio();
+                startActivity(mp.getSong());
             }
         });
 
@@ -131,84 +161,8 @@ public class SongPlayer extends Fragment {
         return String.format("%02d:%02d", minutes, seconds);
     }
 
-
-
-    public void playAudio(Song song){
-        stopAudio();
-        mediaPlayer = new MediaPlayer();
-        String path = song.getPath();
-        try {
-            mediaPlayer.setDataSource(path);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    nextAudio();
-                }
-            });
-        }catch (Exception e){}
-    }
-    public void resumeAudio(){
-        try {
-            if (mediaPlayer != null) {
-                mediaPlayer.start();
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mediaPlayer) {
-                        nextAudio();
-                    }
-                });
-            }
-        }catch (Exception e){}
-    }
-    public void nextAudio(){
-        if (current < Songs.size() - 1) {
-            current++;
-            song = Songs.get(current);
-            playAudio(song);
-            startActivity(song);
-
-        }
-        else {
-            song = Songs.get(0);
-            current = 0;
-            playAudio(song);
-            startActivity(song);
-        }
-    }
-    public void lastAudio(){
-        if (current != 0) {
-            current--;
-            song = Songs.get(current);
-            playAudio(song);
-            startActivity(song);
-
-        }
-        else {
-            song = Songs.get(Songs.size()-1);
-            current = Songs.size()-1;
-            playAudio(song);
-            startActivity(song);
-        }
-    }
-    public void stopAudio(){
-        if (mediaPlayer != null){
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
-    }
-    public void pauseAudio(){
-        if (mediaPlayer != null) {
-            mediaPlayer.pause();
-        }
-    }
-    public void onDestroy(){
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+    public void onDestroy() {
+        mp.DestroyMedia();
         super.onDestroy();
     }
 

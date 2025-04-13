@@ -2,10 +2,13 @@ package com.samsung.playerindividual;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.hardware.camera2.CameraExtensionSession;
 import android.media.MediaMetadataRetriever;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.appcompat.content.res.AppCompatResources;
 
 import java.io.IOException;
 
@@ -16,8 +19,9 @@ public class Song {
     private String artist;
     private String album;
     private Bitmap albumBitmap;
-    private final int defaultBitmap = R.drawable.default_image;
-    public Song(String defaultName,String path){
+    private int defaultBitmap;
+
+    public Song(String defaultName, String path) {
         this.defaultName = defaultName;
         this.path = path;
         getAudioMetadata(path);
@@ -31,12 +35,13 @@ public class Song {
     public String getName() {
         return name;
     }
-    public void setName(String name){
+
+    public void setName(String name) {
         this.name = name;
     }
 
-    private void getAudioMetadata(String filePath){
-            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+    private void getAudioMetadata(String filePath) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(filePath);
             setName(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
@@ -49,13 +54,13 @@ public class Song {
                 albumBitmap = BitmapFactory.decodeByteArray(albumArt, 0, albumArt.length);
             }
         } catch (Exception e) {
-            setName("erropo");
+            setName(null);
             e.printStackTrace();
         } finally {
             try {
                 retriever.release();  // Освобождаем ресурсы
             } catch (IOException e) {
-                setName("ererer");
+                setName(null);
             }
         }
         setName(name != null ? name : defaultName);
@@ -65,6 +70,7 @@ public class Song {
         if (albumBitmap != null) {
             setAlbumBitmap(albumBitmap);
         } else {
+
         }
 
 

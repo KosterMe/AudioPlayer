@@ -1,6 +1,7 @@
 package com.samsung.playerindividual;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -30,12 +32,15 @@ import androidx.fragment.app.FragmentTransaction;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_PERMISSION = 1;
     SongPlayer mp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -46,19 +51,29 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_AUDIO}, 100);
         }
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
-        ListView ls = findViewById(R.id.list_songs);
         ArrayList<Song> Songs = getAudioFiles();
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, getSongNames(Songs));
-//        ListAdapter adapter = new ListAdapter(this,Songs);
-        ls.setAdapter(adapter);
-        ls.setOnItemClickListener(new ListView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                SongPlayer mp = new SongPlayer(Songs,i);
-                openFragment(mp);
+        ListSongs ls = new ListSongs(Songs, this);
+        openFragment(ls);
+
+        ImageButton btn1 = findViewById(R.id.main_btn_list);
+        ImageButton btn2 = findViewById(R.id.main_btn_rand);
+        ImageButton btn3 = findViewById(R.id.main_btn_liked);
+        btn2.setSelected(true);
+        List<ImageButton> buttons = Arrays.asList(btn1, btn2, btn3);
+
+        View.OnClickListener listener = clickedButton -> {
+            for (ImageButton button : buttons) {
+                button.setSelected(button == clickedButton);
             }
-        });
+        };
+
+        btn1.setOnClickListener(listener);
+        btn2.setOnClickListener(listener);
+        btn3.setOnClickListener(listener);
+
+
     }
+
     private void openFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
@@ -69,29 +84,23 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Song> getAudioFiles() {
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " +
+                MediaStore.Audio.Media.DURATION + " >= 3000";  // 3 сек
+
         String[] projection = {MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATA};
         ArrayList<Song> arr = new ArrayList<Song>();
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
+        Cursor cursor = getContentResolver().query(uri, projection, selection, null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME));
                 String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-                String extension = name.substring(name.length()-3);
-                if (extension.equals("mp3"))
-                    arr.add(new Song(name.substring(0,name.length() - 4),path));
+                if (path.endsWith(".mp3") || path.endsWith(".m4a")) {
+                    arr.add(new Song(name.substring(0, name.length() - 4), path));
+                }
             }
             cursor.close();
         }
         return arr;
     }
-    private ArrayList<String> getSongNames(ArrayList<Song> Songs) {
-        ArrayList<String> names = new ArrayList<>();
-        for (Song song : Songs) {
-            names.add(song.getName());
-        }
-        return names;
-    }
-
-
 }
