@@ -1,86 +1,49 @@
 package com.samsung.playerindividual;
 
 import android.content.Context;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.view.View;
 
+import java.io.IOException;
 import java.util.List;
 
 public class Player {
+    private static MediaPlayer mediaPlayer;
+    private static List<Song> songList;
+    private static int currentIndex;
 
-    private MediaPlayer mediaPlayer;
-    private int current;
-    private Song song;
-    private List<Song> Songs;
-
-    public Player(int current, List<Song> songs) {
-        this.current = current;
-        this.song = songs.get(current);
-        Songs = songs;
+    public Player(Context context) {
+        // Можно инициализировать аудиофокус здесь, если нужно
     }
 
-    public void playAudio(Song song) {
-        stopAudio();
+    public void setSongs(List<Song> songs) {
+        songList = songs;
+    }
+
+    public void play(int index) {
+        if (songList == null || songList.isEmpty() || index < 0 || index >= songList.size()) return;
+        currentIndex = index;
+        playAudio(songList.get(currentIndex));
+    }
+
+    private void playAudio(Song song) {
+        stop();
         mediaPlayer = new MediaPlayer();
-        String path = song.getPath();
         try {
-            mediaPlayer.setDataSource(path);
+            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build());
+            mediaPlayer.setDataSource(song.getPath());
             mediaPlayer.prepare();
             mediaPlayer.start();
-//            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//                @Override
-//                public void onCompletion(MediaPlayer mediaPlayer) {
-//                    nextAudio();
-//                }
-//            });
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public void resumeAudio() {
-        try {
-            if (mediaPlayer != null) {
-                mediaPlayer.start();
-//                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//                    @Override
-//                    public void onCompletion(MediaPlayer mediaPlayer) {
-//                        nextAudio();
-//                    }
-//                });
-            }
-        } catch (Exception e) {
-        }
-    }
-
-    public void nextAudio() {
-        if (current < Songs.size() - 1) {
-            current++;
-            song = Songs.get(current);
-            playAudio(song);
-
-
-        } else {
-            song = Songs.get(0);
-            current = 0;
-            playAudio(song);
-
-        }
-    }
-
-    public void lastAudio() {
-        if (current != 0) {
-            current--;
-            song = Songs.get(current);
-            playAudio(song);
-
-        } else {
-            song = Songs.get(Songs.size() - 1);
-            current = Songs.size() - 1;
-            playAudio(song);
-        }
-    }
-
-    public void stopAudio() {
+    public void stop() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -88,41 +51,66 @@ public class Player {
         }
     }
 
-    public void pauseAudio() {
-        if (mediaPlayer != null) {
+    public void pause() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         }
     }
 
-    public MediaPlayer getMediaPlayer() {
-        return mediaPlayer;
+    public void resume() {
+        if (mediaPlayer != null) {
+            mediaPlayer.start();
+        }
     }
 
-    public int getTotalTime() {
-        return mediaPlayer.getDuration();
+    public void seekTo(int position) {
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(position);
+        }
     }
 
-    public void SeekTo(int position) {
-        mediaPlayer.seekTo(position);
-    }
-
-    public boolean IsPlaying() {
-        return mediaPlayer.isPlaying();
-    }
-
-    public int GetCurrentPosition() {
+    public int getCurrentPosition() {
         return mediaPlayer.getCurrentPosition();
     }
 
-    public Song getSong() {
-        return song;
+    public int getDuration() {
+        return mediaPlayer.getDuration();
     }
 
-    public void DestroyMedia() {
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
+
+    public static boolean isPlayingStatic() {
+        return mediaPlayer != null && mediaPlayer.isPlaying();
+    }
+
+    public Song getSong() {
+        return songList != null && currentIndex >= 0 && currentIndex < songList.size()
+                ? songList.get(currentIndex)
+                : null;
+    }
+
+    public void playNext() {
+        if (songList != null && !songList.isEmpty()) {
+            currentIndex = (currentIndex + 1) % songList.size();
+            playAudio(songList.get(currentIndex));
         }
     }
-}
 
+    public void playPrevious() {
+        if (songList != null && !songList.isEmpty()) {
+            currentIndex = (currentIndex - 1 + songList.size()) % songList.size();
+            playAudio(songList.get(currentIndex));
+        }
+    }
+
+    public void release() {
+        stop();
+    }
+
+    public boolean isPlaying() {
+        return mediaPlayer.isPlaying();
+    }
+
+    public int getCurrentIndex() {
+        return currentIndex;
+    }
+}

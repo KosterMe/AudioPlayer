@@ -11,8 +11,9 @@ import android.widget.Toast;
 import androidx.appcompat.content.res.AppCompatResources;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public class Song {
+public class Song implements Serializable {
     private String name;
     private String defaultName;
     private final String path;
@@ -20,6 +21,8 @@ public class Song {
     private String album;
     private Bitmap albumBitmap;
     private int defaultBitmap;
+    private int duration;
+
 
     public Song(String defaultName, String path) {
         this.defaultName = defaultName;
@@ -47,6 +50,7 @@ public class Song {
             setName(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
             setArtist(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
             setAlbum(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+            setDuration(Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
 
             byte[] albumArt = retriever.getEmbeddedPicture();
             albumBitmap = null;
@@ -74,6 +78,14 @@ public class Song {
         }
 
 
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public int getDuration() {
+        return duration;
     }
 
     public String getArtist() {
