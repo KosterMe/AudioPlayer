@@ -14,14 +14,9 @@
             android:id="@+id/list_songs"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"></ListView>
+            android:layout_weight="1">
+        </ListView>
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/place_holder_for_song_player"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            />
     </LinearLayout>
 
 </FrameLayout>

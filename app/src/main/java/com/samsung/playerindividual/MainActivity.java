@@ -3,40 +3,24 @@ package com.samsung.playerindividual;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
-import android.widget.Adapter;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
         ArrayList<Song> Songs = getAudioFiles();
-        ListSongs ls = new ListSongs(Songs, this);
+        MusicDataHolder.setSongs(Songs);
+        ListSongs ls = new ListSongs( this);
         openFragment(ls);
 
         ImageButton btn1 = findViewById(R.id.main_btn_list);
@@ -78,6 +63,14 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener listener = clickedButton -> {
             for (ImageButton button : buttons) {
                 button.setSelected(button == clickedButton);
+            }
+            if (clickedButton.equals(btn1)) {
+                ListSongs ls1 = new ListSongs(this);
+                openFragment(ls1);
+            } else if (clickedButton.equals(btn2)) {
+                PlayerRandom rs = new PlayerRandom();
+                openFragment(rs);
+            } else if (clickedButton.equals(btn3)) {
             }
         };
 

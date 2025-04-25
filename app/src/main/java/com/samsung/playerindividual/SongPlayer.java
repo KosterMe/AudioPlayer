@@ -30,8 +30,8 @@ public class SongPlayer extends Fragment {
     private List<Song> Songs;
     private SeekBar seekBar;
     private TextView tvCurrentTime;
-    private Handler handler = new Handler();
     private int current;
+    private boolean isRandom;
     View view;
     private boolean isUserSeeking = false;
 
@@ -118,6 +118,9 @@ public class SongPlayer extends Fragment {
                 Intent intent = new Intent(requireContext(), MusicService.class);
                 intent.setAction(MusicService.ACTION_SEEK);
                 intent.putExtra("seek_to", seekBar.getProgress());
+                if (seekBar.getProgress() + 1000 >= song.getDuration()){
+                    intent.setAction(MusicService.ACTION_NEXT);
+                }
                 requireContext().startService(intent);
             }
         });

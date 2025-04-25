@@ -90,7 +90,8 @@ public class Player {
 
     public void playNext() {
         if (songList != null && !songList.isEmpty()) {
-            currentIndex = (currentIndex + 1) % songList.size();
+            if (!MusicDataHolder.isIsRandom()) currentIndex = (currentIndex + 1) % songList.size();
+            else currentIndex = RandomSong.getRandomElementNumber();
             playAudio(songList.get(currentIndex));
         }
     }

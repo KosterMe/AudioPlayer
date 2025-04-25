@@ -20,8 +20,10 @@ public class Song implements Serializable {
     private String artist;
     private String album;
     private Bitmap albumBitmap;
-    private int defaultBitmap;
     private int duration;
+    private int temperature = 50;
+    private int lower_border;
+    private int upper_border;
 
 
     public Song(String defaultName, String path) {
@@ -110,5 +112,26 @@ public class Song implements Serializable {
 
     public void setAlbumBitmap(Bitmap albumBitmap) {
         this.albumBitmap = albumBitmap;
+    }
+
+    public int getUpper_border() {
+        return upper_border;
+    }
+    public void setUpper_border(int upper_border) {
+        this.upper_border = upper_border;
+    }
+
+    public int getLower_border() {
+        return lower_border;
+    }
+
+    public void setLower_border(int lower_border) {
+        this.lower_border = lower_border;
+    }
+    public int getTemperature() {
+        return temperature;
+    }
+    public void setTemperature(int temperature) {
+        this.temperature = temperature;
     }
 }

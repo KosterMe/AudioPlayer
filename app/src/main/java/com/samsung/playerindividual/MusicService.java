@@ -47,7 +47,17 @@ public class MusicService extends Service {
             if (player != null && player.isPlaying()) {
                 int position = player.getCurrentPosition();
                 int duration = player.getSong().getDuration();
-
+                if (position + 1500 >= duration) {
+                    Log.i("MyTag","skippingDelay");
+                    player.playNext();
+                    updatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
+                    updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+                    MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
+                    updateMetadata(player.getSong());
+                    sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                    uiHandler.post(updateUiRunnable);
+                    updateNotification();
+                }
                 Intent intent = new Intent(ACTION_UPDATE_UI);
                 intent.putExtra("position", position);
                 intent.putExtra("duration", duration);
@@ -81,6 +91,7 @@ public class MusicService extends Service {
                 currentIndex = MusicDataHolder.getCurrentIndex();
                 player.setSongs(songList);
                 player.play(currentIndex);
+                updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
                 updateMetadata(player.getSong());
                 updateNotification();
                 uiHandler.post(updateUiRunnable);
@@ -186,6 +197,7 @@ public class MusicService extends Service {
             @Override
             public void onSeekTo(long pos) {
                 player.seekTo((int) pos);
+                if (pos + 1000 >= player.getDuration()) onSkipToNext();
                 updatePlaybackState(player.isPlaying()
                         ? PlaybackStateCompat.STATE_PLAYING
                         : PlaybackStateCompat.STATE_PAUSED);
