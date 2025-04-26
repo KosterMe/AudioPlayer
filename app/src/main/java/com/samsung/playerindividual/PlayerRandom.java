@@ -33,11 +33,11 @@ public class PlayerRandom extends Fragment {
         rpb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+//                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     SongPlayer sp = new SongPlayer(Songs, RandomSong.getRandomElementNumber());
                     MusicDataHolder.setIsRandom(true);
                     openFragment(sp);
-                }
+                
             }
         });
         super.onViewCreated(view, savedInstanceState);

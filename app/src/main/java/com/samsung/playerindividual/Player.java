@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.List;
@@ -91,7 +92,11 @@ public class Player {
     public void playNext() {
         if (songList != null && !songList.isEmpty()) {
             if (!MusicDataHolder.isIsRandom()) currentIndex = (currentIndex + 1) % songList.size();
-            else currentIndex = RandomSong.getRandomElementNumber();
+            else {
+                MusicDataHolder.EditTemperature(currentIndex,(int) (((double) getCurrentPosition() / getDuration() * 100 + getSong().getTemperature()) / 2));
+                //Log.i("current_position", "" +getCurrentPosition() + " " + getDuration() + " " +   ( (double) getCurrentPosition() / getDuration()) * 100 + " " + getSong().getTemperature());
+                currentIndex = RandomSong.getRandomElementNumber();
+            }
             playAudio(songList.get(currentIndex));
         }
     }

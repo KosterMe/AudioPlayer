@@ -204,11 +204,11 @@ public class SongPlayer extends Fragment {
             public void onClick(View view) {
                 if (Player.isPlayingStatic()) {
                     sendServiceAction(MusicService.ACTION_PAUSE);
-                    updatePlayPauseButton(play_stop_ib);
+                    Log.i("Update_src","Updated1");
                 }
                 else {
                     sendServiceAction(MusicService.ACTION_PLAY);
-                    updatePlayPauseButton(play_stop_ib);
+                    Log.i("Update_src","Updated2");
                 }
             }
         });

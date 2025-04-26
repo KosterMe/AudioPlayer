@@ -51,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
         ArrayList<Song> Songs = getAudioFiles();
         MusicDataHolder.setSongs(Songs);
-        ListSongs ls = new ListSongs( this);
-        openFragment(ls);
+        PlayerRandom pr = new PlayerRandom();
+        openFragment(pr);
 
         ImageButton btn1 = findViewById(R.id.main_btn_list);
         ImageButton btn2 = findViewById(R.id.main_btn_rand);
@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
                 button.setSelected(button == clickedButton);
             }
             if (clickedButton.equals(btn1)) {
-                ListSongs ls1 = new ListSongs(this);
-                openFragment(ls1);
+                ListSongs ls = new ListSongs(this);
+                openFragment(ls);
             } else if (clickedButton.equals(btn2)) {
                 PlayerRandom rs = new PlayerRandom();
                 openFragment(rs);

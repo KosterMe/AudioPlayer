@@ -23,6 +23,9 @@ import androidx.core.app.NotificationCompat;
 import java.util.List;
 
 public class MusicService extends Service {
+    private AudioManager audioManager;
+    private AudioManager.OnAudioFocusChangeListener afChangeListener;
+
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final String ACTION_PAUSE = "ACTION_PAUSE";
     public static final String ACTION_NEXT = "ACTION_NEXT";
@@ -78,8 +81,40 @@ public class MusicService extends Service {
         mediaSession = new MediaSessionCompat(this, "MusicService");
         player = new Player(this);
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int focusChange) {
+                switch (focusChange) {
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        // Долгосрочная потеря фокуса: ставим на паузу
+                        player.pause();
+                        updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
+                        updateNotification();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        // Кратковременная потеря (например звонок): ставим на паузу
+                        player.pause();
+                        updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
+                        updateNotification();
+                        break;
+                }
+            }
+        };
         initMediaSession();
     }
+    private boolean requestAudioFocus() {
+        int result = audioManager.requestAudioFocus(
+                afChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+        );
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -87,23 +122,28 @@ public class MusicService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_INIT:
-                songList = MusicDataHolder.getSongs();
-                currentIndex = MusicDataHolder.getCurrentIndex();
-                player.setSongs(songList);
-                player.play(currentIndex);
-                updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-                updateMetadata(player.getSong());
-                updateNotification();
-                uiHandler.post(updateUiRunnable);
+                if (requestAudioFocus()) {
+                    // твой код запуска песни
+                    songList = MusicDataHolder.getSongs();
+                    currentIndex = MusicDataHolder.getCurrentIndex();
+                    player.setSongs(songList);
+                    player.play(currentIndex);
+                    updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+                    updateMetadata(player.getSong());
+                    updateNotification();
+                    uiHandler.post(updateUiRunnable);
+                }
                 break;
 
             case ACTION_PLAY:
-                player.resume();
-                updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-                MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
-                updateNotification();
-                uiHandler.post(updateUiRunnable);
-                sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                if (requestAudioFocus()){
+                    player.resume();
+                    updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+                    MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
+                    updateNotification();
+                    uiHandler.post(updateUiRunnable);
+                    sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                }
                 break;
 
             case ACTION_PAUSE:
@@ -152,12 +192,14 @@ public class MusicService extends Service {
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onPlay() {
-                player.resume();
-                updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-                MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
-                updateNotification();
-                uiHandler.post(updateUiRunnable);
-                sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                if (requestAudioFocus()){
+                    player.resume();
+                    updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+                    MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
+                    updateNotification();
+                    uiHandler.post(updateUiRunnable);
+                    sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                }
             }
 
             @Override
@@ -260,7 +302,7 @@ public class MusicService extends Service {
                 .setContentText(currentSong.getArtist())
                 .setSmallIcon(R.drawable.default_image_for_item)
                 .setLargeIcon(currentSong.getAlbumBitmap() != null ? currentSong.getAlbumBitmap() : null)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .addAction(R.drawable.baseline_skip_previous_24, "Prev", prevPendingIntent)
                 .addAction(
                         Player.isPlayingStatic() ? R.drawable.baseline_stop_24 : R.drawable.baseline_play_arrow_24,
@@ -274,7 +316,11 @@ public class MusicService extends Service {
                 .setProgress(duration, currentPosition, false);
 
         Notification notification = builder.build();
-        notificationManager.notify(1, notification);
+        if (Player.isPlayingStatic()) {
+            startForeground(1, notification);
+        } else {
+            notificationManager.notify(1, notification);
+        }
     }
 
     private void createNotificationChannel() {
@@ -299,7 +345,9 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        audioManager.abandonAudioFocus(afChangeListener);
         player.release();
         mediaSession.release();
     }
+
 }

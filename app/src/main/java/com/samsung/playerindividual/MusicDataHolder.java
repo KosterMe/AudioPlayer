@@ -57,6 +57,8 @@ public class MusicDataHolder {
     }
     public static void EditTemperature(int number, int newTemperature){
         try {
+            Log.i("EditT","before: " + songList.get(number).getTemperature() + " " + songList.get(number).getLower_border() + " " + songList.get(number).getUpper_border());
+            Log.i("EditT", "" + getTotalTemperature());
             songList.get(number).setUpper_border(songList.get(number).getLower_border() + newTemperature);
             totalTemperature -= songList.get(number).getTemperature();
             songList.get(number).setTemperature(newTemperature);
@@ -65,6 +67,8 @@ public class MusicDataHolder {
                 songList.get(i).setLower_border(songList.get(i-1).getUpper_border());
                 songList.get(i).setUpper_border(songList.get(i).getLower_border() + songList.get(i).getTemperature());
             }
+            Log.i("EditT", "after: " + songList.get(number).getTemperature() + " " + songList.get(number).getLower_border() + " " + songList.get(number).getUpper_border());
+            Log.i("EditT", "" + getTotalTemperature());
         } catch (IndexOutOfBoundsException e){
         }
     }
