@@ -1,4 +1,4 @@
-package com.samsung.playerindividual;
+package com.samsung.audioplayer;
 
 import org.junit.Test;
 

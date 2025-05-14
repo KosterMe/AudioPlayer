@@ -1,4 +1,4 @@
-package com.samsung.playerindividual;
+package com.samsung.audioplayer;
 
 import android.util.Log;
 
@@ -6,7 +6,7 @@ import java.util.List;
 
 public class RandomSong {
     public static int getRandomElementNumber() {
-        int totalSum = MusicDataHolder.getTotalTemperature();
+        int totalSum = MusicDataHolder.getTotalPriority();
         int RandomElement = (int) ((Math.random() * totalSum) + 1);
         Log.i("MyTag","total: " + totalSum);
         try {
@@ -14,8 +14,8 @@ public class RandomSong {
         } catch (ArrayIndexOutOfBoundsException e) {
             return 0;
         }
-
     }
+
     public static int binary_search(int key) {
         List<Song> Songs = MusicDataHolder.getSongs();
         Log.i("MyTag","size: " + Songs.size());

@@ -1,22 +1,73 @@
-<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ListSongs">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <ImageButton
+            android:id="@+id/button_sort"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="8dp"
+            android:src="@drawable/baseline_sort_24"
+            android:backgroundTint="@android:color/transparent"
+            android:contentDescription="@string/sort_songs" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
         <ListView
             android:id="@+id/list_songs"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
-        </ListView>
+            android:layout_weight="1" />
 
+        <LinearLayout
+            android:id="@+id/selection_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:padding="8dp"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/button_edit"
+                android:singleLine="true"
+                android:textColor="@color/darkgrey"
+                android:backgroundTint="@color/selected_item_color"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Изменить"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/button_add_to_playlist"
+                android:singleLine="true"
+                android:layout_marginLeft="1dp"
+                android:textColor="@color/darkgrey"
+                android:backgroundTint="@color/selected_item_color"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="В плейлист" />
+
+            <Button
+                android:backgroundTint="@color/red"
+                android:singleLine="true"
+                android:layout_marginLeft="1dp"
+                android:textColor="@color/darkgrey"
+                android:id="@+id/button_delete"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Удалить" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
 </FrameLayout>

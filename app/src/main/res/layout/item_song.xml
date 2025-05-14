@@ -14,7 +14,7 @@
         android:layout_marginBottom="5dp"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/default_image_for_item"></ImageView>
+        android:src="@drawable/default_image_for_item"/>
 
     <TextView
         android:id="@+id/item_name"
@@ -24,8 +24,8 @@
         app:layout_constraintLeft_toRightOf="@+id/item_ImageView"
         android:layout_marginLeft="10dp"
         android:autoSizeTextType="uniform"
-
-        android:text="defaultText"></TextView>
+        android:singleLine="true"
+        android:text="defaultText"/>
 
     <TextView
         android:id="@+id/item_artist"
@@ -35,8 +35,8 @@
         app:layout_constraintLeft_toRightOf="@+id/item_ImageView"
         android:layout_marginLeft="10dp"
         android:autoSizeTextType="uniform"
+        android:singleLine="true"
         android:text="defaultText"
-        android:textColor="@color/grey"></TextView>
-
+        android:textColor="@color/grey"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

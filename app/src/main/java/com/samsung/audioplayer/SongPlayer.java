@@ -1,4 +1,4 @@
-package com.samsung.playerindividual;
+package com.samsung.audioplayer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,26 +14,22 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class SongPlayer extends Fragment {
-    private static final int EPS = 1500;
     private Song song;
     private List<Song> Songs;
     private SeekBar seekBar;
     private TextView tvCurrentTime;
     private int current;
-    private boolean isRandom;
     View view;
     private boolean isUserSeeking = false;
-
 
     private final BroadcastReceiver musicReceiver = new BroadcastReceiver() {
         @Override
@@ -77,17 +72,7 @@ public class SongPlayer extends Fragment {
 
         startMusicService();
 
-        view.setOnClickListener(v -> Toast.makeText(requireContext(), "click", Toast.LENGTH_SHORT).show());
-        view.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                Toast.makeText(requireContext(), "longClick", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
         updateSongInfo();
-
-
 
         ImageButton next_ib = view.findViewById(R.id.fragment_next);
         next_ib.setOnClickListener(v -> sendServiceAction(MusicService.ACTION_NEXT));
@@ -141,7 +126,6 @@ public class SongPlayer extends Fragment {
     private void startMusicService() {
         MusicDataHolder.setSongs(Songs);
         MusicDataHolder.setCurrentIndex(current);
-
         Intent intent = new Intent(requireContext(), MusicService.class);
         intent.setAction(MusicService.ACTION_INIT);
         requireContext().startService(intent);
@@ -199,17 +183,14 @@ public class SongPlayer extends Fragment {
 
         ImageButton play_stop_ib = view.findViewById(R.id.fragment_play_stop);
         updatePlayPauseButton(play_stop_ib);
-        play_stop_ib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (Player.isPlayingStatic()) {
-                    sendServiceAction(MusicService.ACTION_PAUSE);
-                    Log.i("Update_src","Updated1");
-                }
-                else {
-                    sendServiceAction(MusicService.ACTION_PLAY);
-                    Log.i("Update_src","Updated2");
-                }
+        play_stop_ib.setOnClickListener(view -> {
+            if (Player.isPlayingStatic()) {
+                sendServiceAction(MusicService.ACTION_PAUSE);
+                Log.i("Update_src","Updated1");
+            }
+            else {
+                sendServiceAction(MusicService.ACTION_PLAY);
+                Log.i("Update_src","Updated2");
             }
         });
 

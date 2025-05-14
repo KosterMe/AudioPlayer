@@ -1,4 +1,4 @@
-package com.samsung.playerindividual;
+package com.samsung.audioplayer;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -23,6 +22,7 @@ import androidx.core.app.NotificationCompat;
 import java.util.List;
 
 public class MusicService extends Service {
+
     private AudioManager audioManager;
     private AudioManager.OnAudioFocusChangeListener afChangeListener;
 
@@ -79,7 +79,7 @@ public class MusicService extends Service {
     public void onCreate() {
         super.onCreate();
         mediaSession = new MediaSessionCompat(this, "MusicService");
-        player = new Player(this);
+        player = new Player();
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -123,17 +123,18 @@ public class MusicService extends Service {
         switch (intent.getAction()) {
             case ACTION_INIT:
                 if (requestAudioFocus()) {
-                    // твой код запуска песни
                     songList = MusicDataHolder.getSongs();
                     currentIndex = MusicDataHolder.getCurrentIndex();
                     player.setSongs(songList);
                     player.play(currentIndex);
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
                     updateMetadata(player.getSong());
+                    sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
                 }
                 break;
+
 
             case ACTION_PLAY:
                 if (requestAudioFocus()){
@@ -143,6 +144,7 @@ public class MusicService extends Service {
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+
                 }
                 break;
 
@@ -300,7 +302,7 @@ public class MusicService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(currentSong.getName())
                 .setContentText(currentSong.getArtist())
-                .setSmallIcon(R.drawable.default_image_for_item)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(currentSong.getAlbumBitmap() != null ? currentSong.getAlbumBitmap() : null)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .addAction(R.drawable.baseline_skip_previous_24, "Prev", prevPendingIntent)

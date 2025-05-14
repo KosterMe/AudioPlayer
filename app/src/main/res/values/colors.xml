@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="purple">#9C27B0</color>
-    <color name="grey">#808080</color>
+    <color name="red">#E63946</color>
+    <color name="black">#0a0a0a</color>
+    <color name="white">#FFFFFF</color>
+    <color name="purple">#1F1B2E</color>
+    <color name="purpur">#9A66FF</color>
+    <color name="base">#e8e0f0</color>
+    <color name="grey">#CBD5E1</color>
+    <color name="darkgrey">#1F2937</color>
+    <color name="selected_item_color">#FF3F51B5</color> <!-- светло-синий -->
+    <color name="primary_color">#24305E</color> <!-- глубокий синий -->
+    <color name="selected_text_color">#553F51B5</color> <!-- прозрачный ripple -->
 </resources>

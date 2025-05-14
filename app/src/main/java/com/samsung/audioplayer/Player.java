@@ -1,22 +1,17 @@
-package com.samsung.playerindividual;
+package com.samsung.audioplayer;
 
-import android.content.Context;
 import android.media.AudioAttributes;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 
 public class Player {
     private static MediaPlayer mediaPlayer;
     private static List<Song> songList;
     private static int currentIndex;
-
-    public Player(Context context) {
-        // Можно инициализировать аудиофокус здесь, если нужно
-    }
+    private final Stack<Integer> stack = new Stack<>();
 
     public void setSongs(List<Song> songs) {
         songList = songs;
@@ -78,7 +73,6 @@ public class Player {
         return mediaPlayer.getDuration();
     }
 
-
     public static boolean isPlayingStatic() {
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
@@ -91,10 +85,10 @@ public class Player {
 
     public void playNext() {
         if (songList != null && !songList.isEmpty()) {
+            stack.push(currentIndex);
             if (!MusicDataHolder.isIsRandom()) currentIndex = (currentIndex + 1) % songList.size();
             else {
-                MusicDataHolder.EditTemperature(currentIndex,(int) (((double) getCurrentPosition() / getDuration() * 100 + getSong().getTemperature()) / 2));
-                //Log.i("current_position", "" +getCurrentPosition() + " " + getDuration() + " " +   ( (double) getCurrentPosition() / getDuration()) * 100 + " " + getSong().getTemperature());
+                if (getSong().isChangeable()) MusicDataHolder.EditPriority(currentIndex,(int) (((double) getCurrentPosition() / getDuration() * 100 + getSong().getPriority()) / 2));
                 currentIndex = RandomSong.getRandomElementNumber();
             }
             playAudio(songList.get(currentIndex));
@@ -103,7 +97,11 @@ public class Player {
 
     public void playPrevious() {
         if (songList != null && !songList.isEmpty()) {
-            currentIndex = (currentIndex - 1 + songList.size()) % songList.size();
+            if (!MusicDataHolder.isIsRandom()) currentIndex = (currentIndex - 1 + songList.size()) % songList.size();
+            else{
+                if (!stack.isEmpty()) currentIndex = stack.pop();
+                else return;
+            }
             playAudio(songList.get(currentIndex));
         }
     }
