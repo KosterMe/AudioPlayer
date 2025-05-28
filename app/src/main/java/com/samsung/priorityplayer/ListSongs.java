@@ -1,8 +1,9 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +50,12 @@ public class ListSongs extends Fragment {
         ListView lv = view.findViewById(R.id.list_songs);
         adapter = new ListAdapter(ctx, Songs);
         lv.setAdapter(adapter);
+        try {
+            lv.post(() -> lv.smoothScrollToPosition(MusicDataHolder.getCurrentIndex() + 5));
+        }catch (Exception e){
+            Log.i("list_view_autoscroll", "dont have index");
+        }
+
 
         btnEdit = view.findViewById(R.id.button_edit);
         btnEdit.setVisibility(View.GONE);

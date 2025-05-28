@@ -1,7 +1,7 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
-import static com.samsung.audioplayer.MusicService.ACTION_PAUSE;
-import static com.samsung.audioplayer.MusicService.ACTION_PLAY;
+import static com.samsung.priorityplayer.MusicService.ACTION_PAUSE;
+import static com.samsung.priorityplayer.MusicService.ACTION_PLAY;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -114,6 +114,7 @@ public class PlayerRandom extends Fragment {
         }
 
     }
+
 
 
     // Переход на новый фрагмент

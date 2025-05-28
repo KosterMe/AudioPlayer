@@ -1,4 +1,4 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -89,9 +89,14 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         values.put(SONG_DELETED,0);
 
         if (song.getAlbumBitmap() != null) {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            song.getAlbumBitmap().compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            values.put("album_art", stream.toByteArray());
+            try {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                song.getAlbumBitmap().compress(Bitmap.CompressFormat.JPEG, 10, stream);
+                values.put("album_art", stream.toByteArray());
+            } catch (Exception e){
+
+            }
+
         }
         Log.i("Scan","update  " + System.currentTimeMillis());
 
@@ -159,6 +164,35 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         db.update(SONGS_TABLE,values, SONG_PATH + "=?", new String[]{path});
         db.delete(LINKS_TABLE, SONG_PATH + "=?", new String[]{path});
     }
+    public Song getSongByPath(String path) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                SONGS_TABLE,
+                new String[]{SONG_NAME, SONG_PATH, SONG_PRIORITY, "artist", "album", "duration", "album_art", "changeable"},
+                SONG_PATH + "=? AND " + SONG_DELETED + "=0",
+                new String[]{path},
+                null, null, null
+        );
+
+        Song song = null;
+
+        if (cursor.moveToFirst()) {
+            String name = cursor.getString(cursor.getColumnIndexOrThrow(SONG_NAME));
+            int priority = cursor.getInt(cursor.getColumnIndexOrThrow(SONG_PRIORITY));
+            String artist = cursor.getString(cursor.getColumnIndexOrThrow("artist"));
+            String album = cursor.getString(cursor.getColumnIndexOrThrow("album"));
+            int duration = cursor.getInt(cursor.getColumnIndexOrThrow("duration"));
+            byte[] albumArtBytes = cursor.getBlob(cursor.getColumnIndexOrThrow("album_art"));
+            boolean changeable = cursor.getInt(cursor.getColumnIndexOrThrow("changeable")) == 1;
+            Bitmap albumArt = albumArtBytes != null ? BitmapFactory.decodeByteArray(albumArtBytes, 0, albumArtBytes.length) : null;
+
+            song = new Song(name, path, artist, album, duration, albumArt, priority, changeable);
+        }
+
+        cursor.close();
+        return song;
+    }
+
 
     public void updatePriority(String path, int newPriority) {
         SQLiteDatabase db = this.getWritableDatabase();

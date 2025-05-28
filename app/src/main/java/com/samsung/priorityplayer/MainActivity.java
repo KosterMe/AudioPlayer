@@ -1,8 +1,9 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -15,31 +16,28 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    public static final int DATA_VERSION = 37;
+    public static final int DATA_VERSION = 49;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_AUDIO}, 100);
-        }
+        // Создание уведомлений
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     "music_channel",
@@ -51,67 +49,91 @@ public class MainActivity extends AppCompatActivity {
                 manager.createNotificationChannel(channel);
             }
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+
+        // Запрос нужных разрешений
+        requestPermission();
+    }
+    private void requestPermission(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_MEDIA_AUDIO,
+            }, 100);
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+            }, 100);
         }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
-
-        SongDatabaseHelper dbHelper = new SongDatabaseHelper(this,DATA_VERSION);
-
-        MusicDataHolder.init(this);
-
-        ArrayList<Song> songs = scanAndSaveAudioFiles(dbHelper);
-        MusicDataHolder.setSongs(songs);
-
-
-        PlayerRandom pr = new PlayerRandom(dbHelper.getAllSongs());
-        openFragment(pr);
-
-        ImageButton btn1 = findViewById(R.id.main_btn_list);
-        ImageButton btn2 = findViewById(R.id.main_btn_rand);
-        ImageButton btn3 = findViewById(R.id.main_btn_playlist);
-        btn2.setSelected(true);
-        List<ImageButton> buttons = Arrays.asList(btn1, btn2, btn3);
-
-
-        View.OnClickListener listener = clickedButton -> {
-            for (ImageButton button : buttons) {
-                button.setSelected(button == clickedButton);
+        if (requestCode == 100) {
+            boolean granted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    granted = false;
+                    break;
+                }
             }
-            if (clickedButton.equals(btn1)) {
-                ListSongs ls = new ListSongs(this,dbHelper.getAllSongs());
-                MusicDataHolder.setPlName("");
-                openFragment(ls);
-            } else if (clickedButton.equals(btn2)) {
-                PlayerRandom rs = new PlayerRandom(dbHelper.getAllSongs());
-                MusicDataHolder.setPlName("");
-                openFragment(rs);
-            } else if (clickedButton.equals(btn3)) {
-                PlayLists p = new PlayLists(this,dbHelper.getAllPLName());
-                MusicDataHolder.setPlName("");
-                openFragment(p);
+
+            if (granted) {
+                SongDatabaseHelper dbHelper = new SongDatabaseHelper(this, DATA_VERSION);
+                MusicDataHolder.init(this);
+
+                scanAndSaveAudioFiles(dbHelper);
+                MusicDataHolder.setSongs(dbHelper.getAllSongs());
+
+                PlayerRandom pr = new PlayerRandom(dbHelper.getAllSongs());
+                openFragment(pr);
+
+                ImageButton btn1 = findViewById(R.id.main_btn_list);
+                ImageButton btn2 = findViewById(R.id.main_btn_rand);
+                ImageButton btn3 = findViewById(R.id.main_btn_playlist);
+                btn2.setSelected(true);
+                List<ImageButton> buttons = Arrays.asList(btn1, btn2, btn3);
+
+                View.OnClickListener listener = clickedButton -> {
+                    for (ImageButton button : buttons) {
+                        button.setSelected(button == clickedButton);
+                    }
+                    if (clickedButton.equals(btn1)) {
+                        ListSongs ls = new ListSongs(this, dbHelper.getAllSongs());
+                        MusicDataHolder.setPlName("");
+                        openFragment(ls);
+                    } else if (clickedButton.equals(btn2)) {
+                        PlayerRandom rs = new PlayerRandom(dbHelper.getAllSongs());
+                        MusicDataHolder.setPlName("");
+                        openFragment(rs);
+                    } else if (clickedButton.equals(btn3)) {
+                        PlayLists p = new PlayLists(this, dbHelper.getAllPLName());
+                        MusicDataHolder.setPlName("");
+                        openFragment(p);
+                    }
+                };
+
+                btn1.setOnClickListener(listener);
+                btn2.setOnClickListener(listener);
+                btn3.setOnClickListener(listener);
+
+            } else {
+                Toast.makeText(this,"Я не могу работать без доступа к файлам.", Toast.LENGTH_SHORT).show();
+                onDestroy();
+                Log.e("Permissions", "Не все разрешения получены");
             }
-        };
-
-        btn1.setOnClickListener(listener);
-        btn2.setOnClickListener(listener);
-        btn3.setOnClickListener(listener);
-
-
+        }
     }
 
     private void openFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.place_holder, fragment); // Меняем текущий фрагмент
+        transaction.replace(R.id.place_holder, fragment);
         transaction.commit();
     }
 
-    private ArrayList<Song> scanAndSaveAudioFiles(SongDatabaseHelper dbHelper) {
+    private void scanAndSaveAudioFiles(SongDatabaseHelper dbHelper) {
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " +
                 MediaStore.Audio.Media.DURATION + " >= 3000";
@@ -121,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
                 MediaStore.Audio.Media.DATA
         };
 
-        ArrayList<Song> songs = new ArrayList<>();
         Cursor cursor = getContentResolver().query(uri, projection, selection, null, MediaStore.Audio.Media.DATE_ADDED + " DESC");
 
         if (cursor != null) {
@@ -129,9 +150,8 @@ public class MainActivity extends AppCompatActivity {
             while (cursor.moveToNext()) {
                 String defaultName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME));
                 String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-                Log.i("Scan","1 " + songs.size());
-
-                    if (path.endsWith(".mp3")) {
+                if (path.endsWith(".mp3")) {
+                    if (!dbHelper.songExists(path)){
                         String name = "";
                         String art = "";
                         String alb = "";
@@ -150,28 +170,36 @@ public class MainActivity extends AppCompatActivity {
                             duration = durationStr != null ? Integer.parseInt(durationStr) : 0;
 
                             byte[] albumArt = retriever.getEmbeddedPicture();
-                            if (albumArt != null) {
+                            if (albumArt != null && albumArt.length < 1_000_000) {
                                 albumBitmap = BitmapFactory.decodeByteArray(albumArt, 0, albumArt.length);
-                            } else {
-                                albumBitmap = null;
+
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        Log.i("Scan", "Try add " + songs.size());
+
                         Song song = new Song(name.replaceAll("\\.mp3", ""), path, art, alb, duration, albumBitmap, 50, true);
                         dbHelper.insertSong(song);
                         dbHelper.updateSong(path, currentTime);
-                        Log.i("Scan", "add " + songs.size());
-                        songs.add(song);
+                    }else{
+                        dbHelper.updateSong(path,currentTime);
+                    }
                 }
             }
             cursor.close();
             dbHelper.clearDB(currentTime);
         }
-        Log.i("Scan","" + songs.size());
-        return songs;
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
+        MusicDataHolder.release();
+
+        // Если есть запущенный сервис — остановим
+        stopService(new Intent(this, MusicService.class));
+
+        Log.d("MainActivity", "onDestroy выполнен, ресурсы освобождены");
+    }
 
 }

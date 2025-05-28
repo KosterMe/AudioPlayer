@@ -1,4 +1,4 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;

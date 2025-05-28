@@ -1,4 +1,4 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -204,7 +204,6 @@ public class SongPlayer extends Fragment {
         try {
             requireContext().unregisterReceiver(musicReceiver);
         } catch (IllegalArgumentException e) {
-            // Возможно, ресивер не был зарегистрирован
         }
         view = null;
         super.onDestroyView();

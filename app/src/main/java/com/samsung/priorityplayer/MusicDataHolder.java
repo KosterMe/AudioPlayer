@@ -1,4 +1,4 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.content.Context;
 import android.util.Log;
@@ -103,4 +103,12 @@ public class MusicDataHolder {
     public static int getTotalPriority(){
         return totalPriority;
     }
+    public static void release() {
+        if (songList != null) {
+            songList.clear();
+            songList = null;
+        }
+        plName = null;
+    }
+
 }

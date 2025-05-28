@@ -1,4 +1,4 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;

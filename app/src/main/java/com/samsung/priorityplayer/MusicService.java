@@ -1,12 +1,14 @@
-package com.samsung.audioplayer;
+package com.samsung.priorityplayer;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
@@ -22,10 +24,6 @@ import androidx.core.app.NotificationCompat;
 import java.util.List;
 
 public class MusicService extends Service {
-
-    private AudioManager audioManager;
-    private AudioManager.OnAudioFocusChangeListener afChangeListener;
-
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final String ACTION_PAUSE = "ACTION_PAUSE";
     public static final String ACTION_NEXT = "ACTION_NEXT";
@@ -42,6 +40,34 @@ public class MusicService extends Service {
     private List<Song> songList;
     private int currentIndex;
     private NotificationManager notificationManager;
+
+    private AudioManager audioManager;
+    private AudioManager.OnAudioFocusChangeListener afChangeListener;
+
+    private BroadcastReceiver noisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                player.pause();
+                updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
+                updateNotification();
+                unregisterNoisyReceiver();
+            }
+        }
+    };
+
+    private void registerNoisyReceiver() {
+        IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        registerReceiver(noisyReceiver, filter);
+    }
+
+    private void unregisterNoisyReceiver() {
+        try {
+            unregisterReceiver(noisyReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.w("MusicService", "NoisyReceiver not registered.");
+        }
+    }
 
     private final Handler uiHandler = new Handler();
     private final Runnable updateUiRunnable = new Runnable() {
@@ -93,12 +119,14 @@ public class MusicService extends Service {
                         player.pause();
                         updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
                         updateNotification();
+                        unregisterNoisyReceiver();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                         // Кратковременная потеря (например звонок): ставим на паузу
                         player.pause();
                         updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
                         updateNotification();
+                        unregisterNoisyReceiver();
                         break;
                 }
             }
@@ -132,6 +160,7 @@ public class MusicService extends Service {
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
+                    registerNoisyReceiver();
                 }
                 break;
 
@@ -144,6 +173,8 @@ public class MusicService extends Service {
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                    registerNoisyReceiver();
+                    registerNoisyReceiver();
 
                 }
                 break;
@@ -155,6 +186,7 @@ public class MusicService extends Service {
                 updateNotification();
                 uiHandler.post(updateUiRunnable);
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                unregisterNoisyReceiver();
                 break;
 
             case ACTION_NEXT:
@@ -166,6 +198,8 @@ public class MusicService extends Service {
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 uiHandler.post(updateUiRunnable);
                 updateNotification();
+                unregisterNoisyReceiver();
+                registerNoisyReceiver();
                 break;
 
             case ACTION_PREV:
@@ -177,6 +211,8 @@ public class MusicService extends Service {
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 uiHandler.post(updateUiRunnable);
                 updateNotification();
+                unregisterNoisyReceiver();
+                registerNoisyReceiver();
                 break;
 
             case ACTION_SEEK:
@@ -201,6 +237,7 @@ public class MusicService extends Service {
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                    registerNoisyReceiver();
                 }
             }
 
@@ -212,6 +249,7 @@ public class MusicService extends Service {
                 updateNotification();
                 uiHandler.post(updateUiRunnable);
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
+                unregisterNoisyReceiver();
             }
 
             @Override
@@ -224,6 +262,8 @@ public class MusicService extends Service {
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 uiHandler.post(updateUiRunnable);
                 updateNotification();
+                unregisterNoisyReceiver();
+                registerNoisyReceiver();
             }
 
             @Override
@@ -236,6 +276,8 @@ public class MusicService extends Service {
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 uiHandler.post(updateUiRunnable);
                 updateNotification();
+                unregisterNoisyReceiver();
+                registerNoisyReceiver();
             }
 
             @Override
@@ -348,6 +390,7 @@ public class MusicService extends Service {
     public void onDestroy() {
         super.onDestroy();
         audioManager.abandonAudioFocus(afChangeListener);
+        unregisterNoisyReceiver();
         player.release();
         mediaSession.release();
     }

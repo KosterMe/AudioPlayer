@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.samsung.audioplayer'
+    namespace 'com.samsung.priorityplayer'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.samsung.audioplayer"
+        applicationId "com.samsung.priorityplayer"
         minSdk 24
         targetSdk 35
         versionCode 1
