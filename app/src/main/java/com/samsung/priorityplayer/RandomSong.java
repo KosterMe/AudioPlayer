@@ -6,11 +6,18 @@ import java.util.List;
 
 public class RandomSong {
     public static int getRandomElementNumber() {
+        List<Song> songs = MusicDataHolder.getSongs();
+        if (songs == null || songs.isEmpty()) {
+            return -1;
+        }
         int totalSum = MusicDataHolder.getTotalPriority();
-        int RandomElement = (int) ((Math.random() * totalSum) + 1);
+        if (totalSum <= 0) {
+            return (int) (Math.random() * songs.size());
+        }
+        int RandomElement = (int) (Math.random() * totalSum);
         Log.i("MyTag","total: " + totalSum);
         try {
-            return (binary_search(RandomElement));
+            return binary_search(RandomElement);
         } catch (ArrayIndexOutOfBoundsException e) {
             return 0;
         }
@@ -27,7 +34,7 @@ public class RandomSong {
                 right = middle - 1;
                 continue;
             }
-            if (Songs.get(middle).getUpper_border() < key) {
+            if (Songs.get(middle).getUpper_border() <= key) {
                 left = middle + 1;
                 continue;
             }

@@ -38,13 +38,17 @@ public class MusicDataHolder {
     private static int getStartPriority() {
         int totalPri = 0;
         for (Song song: songList){
-            totalPri += song.getPriority();
+            totalPri += Math.max(0, song.getPriority());
         }
         Log.i("MyTag","priority = " + totalPri);
         return totalPri;
     }
     public static void setSongs(List<Song> songs) {
-        songList = (ArrayList<Song>) songs;
+        if (songs == null) {
+            songList = new ArrayList<>();
+        } else {
+            songList = new ArrayList<>(songs);
+        }
         totalPriority = getStartPriority();
         getStartBorder();
         Log.i("MyTag","totalsize = " + songList.size());
@@ -66,9 +70,10 @@ public class MusicDataHolder {
         int UpperBorden = 0;
         for(Song song: songList){
             song.setLower_border(LowerBorden);
-            song.setUpper_border(UpperBorden + song.getPriority());
-            LowerBorden += song.getPriority();
-            UpperBorden += song.getPriority();
+            int priority = Math.max(0, song.getPriority());
+            song.setUpper_border(UpperBorden + priority);
+            LowerBorden += priority;
+            UpperBorden += priority;
         }
     }
     public static void EditPriority(int index, int newPriority) {
@@ -76,20 +81,21 @@ public class MusicDataHolder {
             Song song = songList.get(index);
             Log.i("EditP", "before: " + song.getPriority() + " " + song.getLower_border() + " " + song.getUpper_border());
 
-            totalPriority -= song.getPriority();
-            song.setPriority(newPriority);
-            totalPriority += newPriority;
+            int safePriority = Math.max(0, newPriority);
+            totalPriority -= Math.max(0, song.getPriority());
+            song.setPriority(safePriority);
+            totalPriority += safePriority;
 
-            song.setUpper_border(song.getLower_border() + newPriority);
+            song.setUpper_border(song.getLower_border() + safePriority);
 
             for (int i = index + 1; i < songList.size(); i++) {
                 Song nextSong = songList.get(i);
                 nextSong.setLower_border(songList.get(i - 1).getUpper_border());
-                nextSong.setUpper_border(nextSong.getLower_border() + nextSong.getPriority());
+                nextSong.setUpper_border(nextSong.getLower_border() + Math.max(0, nextSong.getPriority()));
             }
 
             if (dbHelper != null) {
-                dbHelper.updatePriority(song.getPath(), newPriority);
+                dbHelper.updatePriority(song.getPath(), safePriority);
             } else {
                 Log.e("EditP", "dbHelper is not initialized");
             }
@@ -104,10 +110,10 @@ public class MusicDataHolder {
         return totalPriority;
     }
     public static void release() {
-        if (songList != null) {
-            songList.clear();
-            songList = null;
-        }
+        songList.clear();
+        totalPriority = 0;
+        currentIndex = 0;
+        isRandom = false;
         plName = null;
     }
 

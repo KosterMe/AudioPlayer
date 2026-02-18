@@ -27,6 +27,9 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
     private static final String SONG_UPDATED_AT = "SONG_UPDATED_AT";
     private static final String SONG_PRIORITY = "PRIORITY";
     private static final String SONG_DELETED = "DELETED";
+    private static final int SONG_STATE_ACTIVE = 0;
+    private static final int SONG_STATE_MISSING = 1;
+    private static final int SONG_STATE_USER_DELETED = 2;
 
     // LINKS table
     private static final String LINKS_TABLE = "LINKS";
@@ -86,7 +89,7 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         values.put("album", song.getAlbum());
         values.put("duration", song.getDuration());
         values.put("changeable", song.isChangeable() ? 1 : 0);
-        values.put(SONG_DELETED,0);
+        values.put(SONG_DELETED, SONG_STATE_ACTIVE);
 
         if (song.getAlbumBitmap() != null) {
             try {
@@ -100,30 +103,57 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         }
         Log.i("Scan","update  " + System.currentTimeMillis());
 
-        db.insertWithOnConflict(SONGS_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        long insertResult = db.insertWithOnConflict(SONGS_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if (insertResult == -1) {
+            db.update(
+                    SONGS_TABLE,
+                    values,
+                    SONG_PATH + "=? AND " + SONG_DELETED + "!=?",
+                    new String[]{song.getPath(), String.valueOf(SONG_STATE_USER_DELETED)}
+            );
+        }
     }
-    public void updateSong(String path, int currentTime){
+    public void updateSong(String path, long currentTime){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SONG_UPDATED_AT, currentTime);
-        db.update(SONGS_TABLE, values, SONG_PATH + "=?", new String[]{path});
+        values.put(SONG_DELETED, SONG_STATE_ACTIVE);
+        db.update(
+                SONGS_TABLE,
+                values,
+                SONG_PATH + "=? AND " + SONG_DELETED + "!=?",
+                new String[]{path, String.valueOf(SONG_STATE_USER_DELETED)}
+        );
         Log.i("Scan","update  " + currentTime);
     }
-    public void clearDB(int currentTime) {
+    public void clearDB(long currentTime) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(
                 SONGS_TABLE,
                 new String[]{SONG_PATH, SONG_UPDATED_AT},
-                SONG_UPDATED_AT + " != ?",
-                new String[]{String.valueOf(currentTime)},
+                SONG_UPDATED_AT + " != ? AND " + SONG_DELETED + "=?",
+                new String[]{String.valueOf(currentTime), String.valueOf(SONG_STATE_ACTIVE)},
                 null, null, null
         );
 
         while (cursor.moveToNext()) {
             String path = cursor.getString(cursor.getColumnIndexOrThrow(SONG_PATH));
-            deleteSongByPath(path); // Удаляем песню и связанные данные
+            markSongMissingByPath(path);
         }
         cursor.close();
+    }
+
+    private void markSongMissingByPath(String path) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(SONG_DELETED, SONG_STATE_MISSING);
+        db.update(
+                SONGS_TABLE,
+                values,
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_ACTIVE)}
+        );
+        db.delete(LINKS_TABLE, SONG_PATH + "=?", new String[]{path});
     }
 
 
@@ -147,8 +177,22 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(
                 SONGS_TABLE,
                 new String[]{SONG_PATH},
-                SONG_PATH + "=? AND " + SONG_DELETED + "=0",
-                new String[]{path},
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_ACTIVE)},
+                null, null, null
+        );
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+        return exists;
+    }
+
+    public boolean isUserDeleted(String path) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                SONGS_TABLE,
+                new String[]{SONG_PATH},
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_USER_DELETED)},
                 null, null, null
         );
         boolean exists = cursor.moveToFirst();
@@ -160,7 +204,7 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
     public void deleteSongByPath(String path) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(SONG_DELETED, 1);
+        values.put(SONG_DELETED, SONG_STATE_USER_DELETED);
         db.update(SONGS_TABLE,values, SONG_PATH + "=?", new String[]{path});
         db.delete(LINKS_TABLE, SONG_PATH + "=?", new String[]{path});
     }
@@ -169,8 +213,8 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(
                 SONGS_TABLE,
                 new String[]{SONG_NAME, SONG_PATH, SONG_PRIORITY, "artist", "album", "duration", "album_art", "changeable"},
-                SONG_PATH + "=? AND " + SONG_DELETED + "=0",
-                new String[]{path},
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_ACTIVE)},
                 null, null, null
         );
 
@@ -208,7 +252,7 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
              Cursor cursor = db.query(
                      SONGS_TABLE,
                      new String[]{SONG_NAME, SONG_PATH, SONG_PRIORITY, "artist", "album", "duration", "album_art", "changeable"},
-                     SONG_DELETED + "=0",
+                     SONG_DELETED + "=" + SONG_STATE_ACTIVE,
                      null,
                      null,
                      null,
@@ -252,7 +296,7 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
                 ", s.artist, s.album, s.duration, s.album_art, s.changeable" +
                 " FROM " + SONGS_TABLE + " s " +
                 "JOIN " + LINKS_TABLE + " l ON s." + SONG_PATH + " = l." + LINK_SONG_PATH +
-                " WHERE l." + LINK_PLAYLIST_NAME + " = ? AND s." + SONG_DELETED + " = 0";
+                " WHERE l." + LINK_PLAYLIST_NAME + " = ? AND s." + SONG_DELETED + " = " + SONG_STATE_ACTIVE;
 
         Cursor cursor = db.rawQuery(query, new String[]{pl_name});
 

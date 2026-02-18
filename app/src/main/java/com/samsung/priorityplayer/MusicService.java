@@ -43,6 +43,7 @@ public class MusicService extends Service {
 
     private AudioManager audioManager;
     private AudioManager.OnAudioFocusChangeListener afChangeListener;
+    private boolean noisyReceiverRegistered = false;
 
     private BroadcastReceiver noisyReceiver = new BroadcastReceiver() {
         @Override
@@ -57,15 +58,24 @@ public class MusicService extends Service {
     };
 
     private void registerNoisyReceiver() {
+        if (noisyReceiverRegistered) {
+            return;
+        }
         IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         registerReceiver(noisyReceiver, filter);
+        noisyReceiverRegistered = true;
     }
 
     private void unregisterNoisyReceiver() {
+        if (!noisyReceiverRegistered) {
+            return;
+        }
         try {
             unregisterReceiver(noisyReceiver);
         } catch (IllegalArgumentException e) {
             Log.w("MusicService", "NoisyReceiver not registered.");
+        } finally {
+            noisyReceiverRegistered = false;
         }
     }
 
@@ -76,7 +86,7 @@ public class MusicService extends Service {
             if (player != null && player.isPlaying()) {
                 Song currentSong = player.getSong();
                 if (currentSong == null) {
-                    uiHandler.postDelayed(this, 1000);
+                    stopUiUpdates();
                     return;
                 }
                 int position = player.getCurrentPosition();
@@ -87,9 +97,15 @@ public class MusicService extends Service {
                     updatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
                     MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
-                    updateMetadata(player.getSong());
+                    currentSong = player.getSong();
+                    if (currentSong == null) {
+                        stopUiUpdates();
+                        return;
+                    }
+                    position = player.getCurrentPosition();
+                    duration = currentSong.getDuration();
+                    updateMetadata(currentSong);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                    uiHandler.post(updateUiRunnable);
                     updateNotification();
                 }
                 Intent intent = new Intent(ACTION_UPDATE_UI);
@@ -105,6 +121,15 @@ public class MusicService extends Service {
             }
         }
     };
+
+    private void startUiUpdates() {
+        uiHandler.removeCallbacks(updateUiRunnable);
+        uiHandler.post(updateUiRunnable);
+    }
+
+    private void stopUiUpdates() {
+        uiHandler.removeCallbacks(updateUiRunnable);
+    }
 
     @Override
     public void onCreate() {
@@ -176,7 +201,7 @@ public class MusicService extends Service {
                     updateMetadata(currentSong);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     updateNotification();
-                    uiHandler.post(updateUiRunnable);
+                    startUiUpdates();
                     registerNoisyReceiver();
                 }
                 break;
@@ -188,7 +213,7 @@ public class MusicService extends Service {
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
                     MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                     updateNotification();
-                    uiHandler.post(updateUiRunnable);
+                    startUiUpdates();
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     registerNoisyReceiver();
 
@@ -200,7 +225,7 @@ public class MusicService extends Service {
                 updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateNotification();
-                uiHandler.post(updateUiRunnable);
+                stopUiUpdates();
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 unregisterNoisyReceiver();
                 break;
@@ -212,7 +237,7 @@ public class MusicService extends Service {
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateMetadata(player.getSong());
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                uiHandler.post(updateUiRunnable);
+                startUiUpdates();
                 updateNotification();
                 unregisterNoisyReceiver();
                 registerNoisyReceiver();
@@ -225,7 +250,7 @@ public class MusicService extends Service {
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateMetadata(player.getSong());
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                uiHandler.post(updateUiRunnable);
+                startUiUpdates();
                 updateNotification();
                 unregisterNoisyReceiver();
                 registerNoisyReceiver();
@@ -251,7 +276,7 @@ public class MusicService extends Service {
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
                     MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                     updateNotification();
-                    uiHandler.post(updateUiRunnable);
+                    startUiUpdates();
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     registerNoisyReceiver();
                 }
@@ -263,7 +288,7 @@ public class MusicService extends Service {
                 updatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateNotification();
-                uiHandler.post(updateUiRunnable);
+                stopUiUpdates();
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                 unregisterNoisyReceiver();
             }
@@ -276,7 +301,7 @@ public class MusicService extends Service {
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateMetadata(player.getSong());
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                uiHandler.post(updateUiRunnable);
+                startUiUpdates();
                 updateNotification();
                 unregisterNoisyReceiver();
                 registerNoisyReceiver();
@@ -290,7 +315,7 @@ public class MusicService extends Service {
                 MusicDataHolder.setCurrentIndex(player.getCurrentIndex());
                 updateMetadata(player.getSong());
                 sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                uiHandler.post(updateUiRunnable);
+                startUiUpdates();
                 updateNotification();
                 unregisterNoisyReceiver();
                 registerNoisyReceiver();
@@ -425,6 +450,7 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopUiUpdates();
         audioManager.abandonAudioFocus(afChangeListener);
         unregisterNoisyReceiver();
         player.release();

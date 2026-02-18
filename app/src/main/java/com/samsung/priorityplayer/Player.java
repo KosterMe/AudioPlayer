@@ -88,8 +88,17 @@ public class Player {
             stack.push(currentIndex);
             if (!MusicDataHolder.isIsRandom()) currentIndex = (currentIndex + 1) % songList.size();
             else {
-                if (getSong().isChangeable()) MusicDataHolder.EditPriority(currentIndex,(int) (((double) getCurrentPosition() / getDuration() * 100 + getSong().getPriority()) / 2));
-                currentIndex = RandomSong.getRandomElementNumber();
+                Song currentSong = getSong();
+                int duration = getDuration();
+                if (currentSong != null && currentSong.isChangeable() && duration > 0) {
+                    int updatedPriority = (int) ((((double) getCurrentPosition() / duration) * 100 + currentSong.getPriority()) / 2);
+                    MusicDataHolder.EditPriority(currentIndex, updatedPriority);
+                }
+                int randomIndex = RandomSong.getRandomElementNumber();
+                if (randomIndex < 0 || randomIndex >= songList.size()) {
+                    randomIndex = (currentIndex + 1) % songList.size();
+                }
+                currentIndex = randomIndex;
             }
             playAudio(songList.get(currentIndex));
         }

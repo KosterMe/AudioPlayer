@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,9 +17,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import java.util.List;
+import java.util.Locale;
 
 public class SongPlayer extends Fragment {
     private Song song;
@@ -30,6 +31,7 @@ public class SongPlayer extends Fragment {
     private int current;
     View view;
     private boolean isUserSeeking = false;
+    private boolean receiverRegistered = false;
 
     private final BroadcastReceiver musicReceiver = new BroadcastReceiver() {
         @Override
@@ -44,6 +46,13 @@ public class SongPlayer extends Fragment {
                     break;
                 case MusicService.ACTION_SONG_CHANGED:
                     current = MusicDataHolder.getCurrentIndex();
+                    if (Songs == null || Songs.isEmpty()) {
+                        song = null;
+                        return;
+                    }
+                    if (current < 0 || current >= Songs.size()) {
+                        current = 0;
+                    }
                     song = Songs.get(current);
                     Log.i("MyTag","changer");
                     updateSongInfo();
@@ -57,6 +66,14 @@ public class SongPlayer extends Fragment {
 
     public SongPlayer(List<Song> Songs, int current) {
         this.Songs = Songs;
+        if (Songs == null || Songs.isEmpty()) {
+            this.current = 0;
+            this.song = null;
+            return;
+        }
+        if (current < 0 || current >= Songs.size()) {
+            current = 0;
+        }
         this.current = current;
         this.song = Songs.get(current);
     }
@@ -83,7 +100,7 @@ public class SongPlayer extends Fragment {
         seekBar = view.findViewById(R.id.fragment_seek_bar);
         tvCurrentTime = view.findViewById(R.id.current_time);
         TextView tvTotalTime = view.findViewById(R.id.total_time);
-        tvTotalTime.setText(formatTime(song.getDuration()));
+        tvTotalTime.setText(song != null ? formatTime(song.getDuration()) : formatTime(0));
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -99,6 +116,10 @@ public class SongPlayer extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                if (song == null) {
+                    isUserSeeking = false;
+                    return;
+                }
                 isUserSeeking = false;
                 Intent intent = new Intent(requireContext(), MusicService.class);
                 intent.setAction(MusicService.ACTION_SEEK);
@@ -113,17 +134,15 @@ public class SongPlayer extends Fragment {
         IntentFilter filter = new IntentFilter();
         filter.addAction(MusicService.ACTION_UPDATE_UI);
         filter.addAction(MusicService.ACTION_SONG_CHANGED);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(musicReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-            Log.i("MyTag","reg");
-        } else {
-            requireContext().registerReceiver(musicReceiver, filter);
-        }
+        ContextCompat.registerReceiver(requireContext(), musicReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        receiverRegistered = true;
 
     }
 
     private void startMusicService() {
+        if (Songs == null || Songs.isEmpty()) {
+            return;
+        }
         MusicDataHolder.setSongs(Songs);
         MusicDataHolder.setCurrentIndex(current);
         Intent intent = new Intent(requireContext(), MusicService.class);
@@ -202,8 +221,12 @@ public class SongPlayer extends Fragment {
     @Override
     public void onDestroyView() {
         try {
-            requireContext().unregisterReceiver(musicReceiver);
+            if (receiverRegistered) {
+                requireContext().unregisterReceiver(musicReceiver);
+            }
         } catch (IllegalArgumentException e) {
+        } finally {
+            receiverRegistered = false;
         }
         view = null;
         super.onDestroyView();
@@ -212,6 +235,6 @@ public class SongPlayer extends Fragment {
     private String formatTime(int millis) {
         int minutes = (millis / 1000) / 60;
         int seconds = (millis / 1000) % 60;
-        return String.format("%02d:%02d", minutes, seconds);
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 }
