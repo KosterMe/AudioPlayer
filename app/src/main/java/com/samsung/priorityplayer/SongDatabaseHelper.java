@@ -18,6 +18,9 @@ import java.util.List;
 public class SongDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "songs.db";
+    private static final int ALBUM_ART_MAX_SIZE = 512;
+    private static final int ALBUM_ART_JPEG_QUALITY = 88;
+    private static final int ALBUM_ART_REFRESH_THRESHOLD_BYTES = 12_000;
 
     // SONGS table
     private static final String SONGS_TABLE = "SONGS";
@@ -91,15 +94,9 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         values.put("changeable", song.isChangeable() ? 1 : 0);
         values.put(SONG_DELETED, SONG_STATE_ACTIVE);
 
-        if (song.getAlbumBitmap() != null) {
-            try {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                song.getAlbumBitmap().compress(Bitmap.CompressFormat.JPEG, 10, stream);
-                values.put("album_art", stream.toByteArray());
-            } catch (Exception e){
-
-            }
-
+        byte[] albumArtBytes = serializeAlbumArt(song.getAlbumBitmap());
+        if (albumArtBytes != null) {
+            values.put("album_art", albumArtBytes);
         }
         Log.i("Scan","update  " + System.currentTimeMillis());
 
@@ -111,6 +108,42 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
                     SONG_PATH + "=? AND " + SONG_DELETED + "!=?",
                     new String[]{song.getPath(), String.valueOf(SONG_STATE_USER_DELETED)}
             );
+        }
+    }
+
+    public void updateAlbumArt(String path, Bitmap albumBitmap) {
+        byte[] albumArtBytes = serializeAlbumArt(albumBitmap);
+        if (albumArtBytes == null) {
+            return;
+        }
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("album_art", albumArtBytes);
+        db.update(
+                SONGS_TABLE,
+                values,
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_ACTIVE)}
+        );
+    }
+
+    public boolean shouldRefreshAlbumArt(String path) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.query(
+                SONGS_TABLE,
+                new String[]{"album_art"},
+                SONG_PATH + "=? AND " + SONG_DELETED + "=?",
+                new String[]{path, String.valueOf(SONG_STATE_ACTIVE)},
+                null, null, null
+        )) {
+            if (!cursor.moveToFirst()) {
+                return false;
+            }
+            byte[] albumArt = cursor.getBlob(cursor.getColumnIndexOrThrow("album_art"));
+            return albumArt == null || albumArt.length < ALBUM_ART_REFRESH_THRESHOLD_BYTES;
+        } catch (Exception e) {
+            Log.w("AlbumArt", "Failed to evaluate album art freshness for " + path, e);
+            return false;
         }
     }
     public void updateSong(String path, long currentTime){
@@ -411,5 +444,34 @@ public class SongDatabaseHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return list;
+    }
+
+    private byte[] serializeAlbumArt(Bitmap albumBitmap) {
+        if (albumBitmap == null) {
+            return null;
+        }
+        try {
+            Bitmap normalized = downscaleIfNeeded(albumBitmap);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            normalized.compress(Bitmap.CompressFormat.JPEG, ALBUM_ART_JPEG_QUALITY, stream);
+            return stream.toByteArray();
+        } catch (Exception e) {
+            Log.w("AlbumArt", "Album art serialization failed", e);
+            return null;
+        }
+    }
+
+    private Bitmap downscaleIfNeeded(Bitmap source) {
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int largest = Math.max(width, height);
+        if (largest <= ALBUM_ART_MAX_SIZE) {
+            return source;
+        }
+
+        float scale = (float) ALBUM_ART_MAX_SIZE / (float) largest;
+        int targetWidth = Math.max(1, Math.round(width * scale));
+        int targetHeight = Math.max(1, Math.round(height * scale));
+        return Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true);
     }
 }

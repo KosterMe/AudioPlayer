@@ -20,13 +20,16 @@
         android:paddingEnd="12dp"
         android:paddingBottom="12dp">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/fragment_image"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:contentDescription="@string/cd_album_cover"
             android:scaleType="centerCrop"
             android:src="@drawable/default_image_for_item"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.PlayerIndividual.Cover.Large"
+            app:strokeColor="@color/outline_soft"
+            app:strokeWidth="1dp"
             app:layout_constraintBottom_toBottomOf="@+id/fragment_song_artist"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/fragment_song_name" />
@@ -64,6 +67,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginStart="8dp"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="@+id/fragment_song_artist"
             app:layout_constraintEnd_toEndOf="parent"
@@ -71,28 +75,34 @@
 
             <ImageButton
                 android:id="@+id/fragment_last"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/cd_prev"
+                android:padding="2dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/baseline_skip_previous_24"
                 app:tint="@color/darkgrey" />
 
             <ImageButton
                 android:id="@+id/fragment_play_stop"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:background="@drawable/bg_round_action"
                 android:contentDescription="@string/cd_play_pause"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/baseline_stop_24"
                 app:tint="@color/on_primary" />
 
             <ImageButton
                 android:id="@+id/fragment_next"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/cd_next"
+                android:padding="2dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/baseline_skip_next_24"
                 app:tint="@color/darkgrey" />
         </LinearLayout>

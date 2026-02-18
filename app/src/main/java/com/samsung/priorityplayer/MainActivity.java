@@ -194,10 +194,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
-                        byte[] albumArt = retriever.getEmbeddedPicture();
-                        if (albumArt != null && albumArt.length < 1_000_000) {
-                            albumBitmap = BitmapFactory.decodeByteArray(albumArt, 0, albumArt.length);
-                        }
+                        albumBitmap = decodeAlbumArt(retriever);
                     } catch (Exception e) {
                         Log.w("scan", "Metadata read failed for " + path, e);
                     }
@@ -206,11 +203,35 @@ public class MainActivity extends AppCompatActivity {
                     dbHelper.insertSong(song);
                     dbHelper.updateSong(path, currentTime);
                 } else {
+                    if (dbHelper.shouldRefreshAlbumArt(path)) {
+                        Bitmap refreshedAlbumArt = extractAlbumArt(path);
+                        if (refreshedAlbumArt != null) {
+                            dbHelper.updateAlbumArt(path, refreshedAlbumArt);
+                        }
+                    }
                     dbHelper.updateSong(path, currentTime);
                 }
             }
             dbHelper.clearDB(currentTime);
         }
+    }
+
+    private Bitmap extractAlbumArt(String path) {
+        try (MediaMetadataRetriever retriever = new MediaMetadataRetriever()) {
+            retriever.setDataSource(path);
+            return decodeAlbumArt(retriever);
+        } catch (Exception e) {
+            Log.w("scan", "Album art refresh failed for " + path, e);
+            return null;
+        }
+    }
+
+    private Bitmap decodeAlbumArt(MediaMetadataRetriever retriever) {
+        byte[] albumArt = retriever.getEmbeddedPicture();
+        if (albumArt == null || albumArt.length == 0 || albumArt.length > 5_000_000) {
+            return null;
+        }
+        return BitmapFactory.decodeByteArray(albumArt, 0, albumArt.length);
     }
 
     @Override
