@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="red">#E56C60</color>
+    <color name="black">#060B0D</color>
+    <color name="white">#EAF4F1</color>
+    <color name="purple">#2A6C5D</color>
+    <color name="purpur">#3EA287</color>
+    <color name="base">#1A2A27</color>
+    <color name="grey">#91A8AE</color>
+    <color name="darkgrey">#E7F2EF</color>
+    <color name="selected_item_color">#2A4D45</color>
+    <color name="primary_color">#173E37</color>
+    <color name="selected_text_color">#7AB8A6</color>
+
+    <color name="background_start">#0D1518</color>
+    <color name="background_end">#111C20</color>
+    <color name="surface_card">#172327</color>
+    <color name="surface_elevated">#1B2A2F</color>
+    <color name="on_primary">#E8F5F1</color>
+    <color name="nav_icon_inactive">#6C8C84</color>
+    <color name="nav_icon_active">#DDF2EC</color>
+    <color name="nav_stroke">#2E5F54</color>
+    <color name="outline_soft">#2B3A3E</color>
+</resources>

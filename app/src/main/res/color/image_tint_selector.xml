@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Активная кнопка -->
-    <item android:color="#e8e0f0" android:state_selected="true" />
-    <!-- Неактивная -->
-    <item android:color="#000000" />
+    <item android:color="@color/nav_icon_active" android:state_selected="true" />
+    <item android:color="@color/nav_icon_inactive" />
 </selector>

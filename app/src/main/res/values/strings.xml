@@ -1,7 +1,35 @@
 <resources>
     <string name="app_name">PriorityPlayer</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="sort_songs">Сортировать песни</string>
 
+    <string name="sort_songs">Sort tracks</string>
+    <string name="song_list_title">Library</string>
+    <string name="playlists_title">Playlists</string>
+    <string name="random_mode_title">Priority Shuffle</string>
+    <string name="random_mode_subtitle">Your listening history gently steers what plays next.</string>
+
+    <string name="action_add_playlist">Add playlist</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_add_to_playlist">Add to playlist</string>
+    <string name="lock_priority">Lock auto-priority</string>
+
+    <string name="nav_library">Open library</string>
+    <string name="nav_shuffle">Open priority shuffle</string>
+    <string name="nav_playlists">Open playlists</string>
+
+    <string name="cd_sort">Sort tracks</string>
+    <string name="cd_album_cover">Album art</string>
+    <string name="cd_prev">Previous track</string>
+    <string name="cd_play_pause">Play or pause</string>
+    <string name="cd_next">Next track</string>
+    <string name="cd_random_toggle">Start or pause random playback</string>
+
+    <string name="time_zero">00:00</string>
+    <string name="priority_value">Priority: %1$d</string>
+    <string name="priority_value_default">Priority: 50</string>
+    <string name="default_song_name">Track title</string>
+    <string name="default_song_artist">Artist</string>
+    <string name="default_playlist_name">Playlist name</string>
 </resources>

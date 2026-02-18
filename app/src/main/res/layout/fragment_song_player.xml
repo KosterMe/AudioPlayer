@@ -1,123 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="4dp"
+    app:cardBackgroundColor="@color/surface_card"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="6dp"
+    app:strokeColor="@color/outline_soft"
+    app:strokeWidth="1dp"
     tools:context=".SongPlayer">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="12dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <ImageView
+            android:id="@+id/fragment_image"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@string/cd_album_cover"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_image_for_item"
+            app:layout_constraintBottom_toBottomOf="@+id/fragment_song_artist"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/fragment_song_name" />
+
+        <TextView
+            android:id="@+id/fragment_song_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/darkgrey"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/control_row"
+            app:layout_constraintStart_toEndOf="@id/fragment_image"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Track title" />
 
-            <ImageView
-                android:id="@+id/fragment_image"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:src="@drawable/default_image_for_item"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginEnd="5dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginBottom="5dp"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
+        <TextView
+            android:id="@+id/fragment_song_artist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/grey"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toStartOf="@+id/control_row"
+            app:layout_constraintStart_toEndOf="@id/fragment_image"
+            app:layout_constraintTop_toBottomOf="@id/fragment_song_name"
+            tools:text="Artist" />
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="4">
+            android:id="@+id/control_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/fragment_song_artist"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/fragment_song_name">
 
-            <TextView
-                android:id="@+id/fragment_song_name"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="5"
-                android:autoSizeTextType="uniform"/>
+            <ImageButton
+                android:id="@+id/fragment_last"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cd_prev"
+                android:src="@drawable/baseline_skip_previous_24"
+                app:tint="@color/darkgrey" />
 
-            <TextView
-                android:id="@+id/fragment_song_artist"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:autoSizeTextType="uniform"
-                android:textColor="@color/grey"/>
+            <ImageButton
+                android:id="@+id/fragment_play_stop"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_round_action"
+                android:contentDescription="@string/cd_play_pause"
+                android:src="@drawable/baseline_stop_24"
+                app:tint="@color/on_primary" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="5"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <SeekBar
-                        android:id="@+id/fragment_seek_bar"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"/>
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1">
-
-                        <TextView
-                            android:id="@+id/current_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00:00"
-                            android:autoSizeTextType="uniform"
-                            app:layout_constraintLeft_toLeftOf="parent"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            android:layout_marginBottom="4dp" />
-
-                        <TextView
-                            android:id="@+id/total_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00:00"
-                            android:autoSizeTextType="uniform"
-                            app:layout_constraintRight_toRightOf="parent"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            android:layout_marginBottom="4dp"/>
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-                </LinearLayout>
-
-
-                <ImageButton
-                    android:id="@+id/fragment_last"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_skip_previous_24">
-
-                </ImageButton>
-
-                <ImageButton
-                    android:id="@+id/fragment_play_stop"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_stop_24"/>
-
-                <ImageButton
-                    android:id="@+id/fragment_next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_skip_next_24"/>
-            </LinearLayout>
+            <ImageButton
+                android:id="@+id/fragment_next"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cd_next"
+                android:src="@drawable/baseline_skip_next_24"
+                app:tint="@color/darkgrey" />
         </LinearLayout>
-    </LinearLayout>
-</FrameLayout>
+
+        <SeekBar
+            android:id="@+id/fragment_seek_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:maxHeight="6dp"
+            android:minHeight="6dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fragment_image" />
+
+        <TextView
+            android:id="@+id/current_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/time_zero"
+            android:textColor="@color/grey"
+            android:textSize="11sp"
+            app:layout_constraintStart_toStartOf="@id/fragment_seek_bar"
+            app:layout_constraintTop_toBottomOf="@id/fragment_seek_bar" />
+
+        <TextView
+            android:id="@+id/total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/time_zero"
+            android:textColor="@color/grey"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toEndOf="@id/fragment_seek_bar"
+            app:layout_constraintTop_toBottomOf="@id/fragment_seek_bar" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

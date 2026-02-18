@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="red">#E63946</color>
-    <color name="black">#0a0a0a</color>
+    <color name="red">#C8483B</color>
+    <color name="black">#0F1719</color>
     <color name="white">#FFFFFF</color>
-    <color name="purple">#1F1B2E</color>
-    <color name="purpur">#9A66FF</color>
-    <color name="base">#e8e0f0</color>
-    <color name="grey">#CBD5E1</color>
-    <color name="darkgrey">#1F2937</color>
-    <color name="selected_item_color">#FF3F51B5</color> <!-- светло-синий -->
-    <color name="primary_color">#24305E</color> <!-- глубокий синий -->
-    <color name="selected_text_color">#553F51B5</color> <!-- прозрачный ripple -->
+    <color name="purple">#245246</color>
+    <color name="purpur">#2C806C</color>
+    <color name="base">#DDEFE8</color>
+    <color name="grey">#6A7E84</color>
+    <color name="darkgrey">#14262B</color>
+    <color name="selected_item_color">#C6E7DC</color>
+    <color name="primary_color">#104A41</color>
+    <color name="selected_text_color">#1C6A5B</color>
+
+    <color name="background_start">#F3FBF8</color>
+    <color name="background_end">#E8F2EE</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_elevated">#F7FBF9</color>
+    <color name="on_primary">#F4FFFC</color>
+    <color name="nav_icon_inactive">#8EB1A8</color>
+    <color name="nav_icon_active">#EDF8F5</color>
+    <color name="nav_stroke">#206C5E</color>
+    <color name="outline_soft">#D5E7E1</color>
 </resources>

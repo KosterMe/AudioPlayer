@@ -1,42 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="72dp"
+    android:background="@drawable/bg_card_surface"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp">
 
     <ImageView
         android:id="@+id/item_ImageView"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:contentDescription="@string/cd_album_cover"
+        android:scaleType="centerCrop"
+        android:src="@drawable/default_image_for_item"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/default_image_for_item"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/item_name"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@id/item_ImageView"
-        app:layout_constraintLeft_toRightOf="@+id/item_ImageView"
-        android:layout_marginLeft="10dp"
-        android:autoSizeTextType="uniform"
-        android:singleLine="true"
-        android:text="defaultText"/>
+        android:layout_marginStart="10dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/default_song_name"
+        android:textColor="@color/darkgrey"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/item_ImageView"
+        app:layout_constraintTop_toTopOf="@id/item_ImageView" />
 
     <TextView
         android:id="@+id/item_artist"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/item_name"
-        app:layout_constraintLeft_toRightOf="@+id/item_ImageView"
-        android:layout_marginLeft="10dp"
-        android:autoSizeTextType="uniform"
-        android:singleLine="true"
-        android:text="defaultText"
-        android:textColor="@color/grey"/>
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="10dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/default_song_artist"
+        android:textColor="@color/grey"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/item_ImageView"
+        app:layout_constraintTop_toBottomOf="@id/item_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

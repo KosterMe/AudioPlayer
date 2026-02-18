@@ -1,7 +1,6 @@
 package com.samsung.priorityplayer;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,23 +15,23 @@ import java.util.List;
 import java.util.Set;
 
 public class PLAdapter extends BaseAdapter {
-    private final ArrayList<String> PLList;
+    private final ArrayList<String> playList;
     private final Context ctx;
     private final Set<Integer> selectedItems = new HashSet<>();
 
     public PLAdapter(Context context, ArrayList<String> plList) {
         this.ctx = context;
-        this.PLList = plList;
+        this.playList = plList;
     }
 
     @Override
     public int getCount() {
-        return PLList.size();
+        return playList.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return PLList.get(i);
+        return playList.get(i);
     }
 
     @Override
@@ -68,14 +67,14 @@ public class PLAdapter extends BaseAdapter {
             view = LayoutInflater.from(ctx).inflate(R.layout.item_playlist, viewGroup, false);
         }
 
-        TextView tw = view.findViewById(R.id.item_playlist_id);
-        tw.setText(PLList.get(i));
+        TextView title = view.findViewById(R.id.item_playlist_id);
+        title.setText(playList.get(i));
 
-        if (selectedItems.contains(i)) {
-            view.setBackgroundColor(ContextCompat.getColor(ctx, R.color.selected_item_color));
-        } else {
-            view.setBackgroundColor(Color.TRANSPARENT);
-        }
+        view.setBackgroundResource(R.drawable.bg_card_surface);
+        int itemColor = selectedItems.contains(i)
+                ? ContextCompat.getColor(ctx, R.color.selected_item_color)
+                : ContextCompat.getColor(ctx, R.color.surface_card);
+        view.getBackground().setTint(itemColor);
 
         return view;
     }
