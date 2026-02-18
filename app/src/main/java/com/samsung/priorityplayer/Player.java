@@ -66,11 +66,11 @@ public class Player {
     }
 
     public int getCurrentPosition() {
-        return mediaPlayer.getCurrentPosition();
+        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
     }
 
     public int getDuration() {
-        return mediaPlayer.getDuration();
+        return mediaPlayer != null ? mediaPlayer.getDuration() : 0;
     }
 
     public static boolean isPlayingStatic() {
@@ -111,7 +111,7 @@ public class Player {
     }
 
     public boolean isPlaying() {
-        return mediaPlayer.isPlaying();
+        return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 
     public int getCurrentIndex() {

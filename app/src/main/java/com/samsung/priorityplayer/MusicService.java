@@ -74,8 +74,13 @@ public class MusicService extends Service {
         @Override
         public void run() {
             if (player != null && player.isPlaying()) {
+                Song currentSong = player.getSong();
+                if (currentSong == null) {
+                    uiHandler.postDelayed(this, 1000);
+                    return;
+                }
                 int position = player.getCurrentPosition();
-                int duration = player.getSong().getDuration();
+                int duration = currentSong.getDuration();
                 if (position + 1500 >= duration) {
                     Log.i("MyTag","skippingDelay");
                     player.playNext();
@@ -152,11 +157,23 @@ public class MusicService extends Service {
             case ACTION_INIT:
                 if (requestAudioFocus()) {
                     songList = MusicDataHolder.getSongs();
+                    if (songList == null || songList.isEmpty()) {
+                        stopSelf();
+                        return START_NOT_STICKY;
+                    }
                     currentIndex = MusicDataHolder.getCurrentIndex();
+                    if (currentIndex < 0 || currentIndex >= songList.size()) {
+                        currentIndex = 0;
+                    }
                     player.setSongs(songList);
                     player.play(currentIndex);
+                    Song currentSong = player.getSong();
+                    if (currentSong == null) {
+                        stopSelf();
+                        return START_NOT_STICKY;
+                    }
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-                    updateMetadata(player.getSong());
+                    updateMetadata(currentSong);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
@@ -173,7 +190,6 @@ public class MusicService extends Service {
                     updateNotification();
                     uiHandler.post(updateUiRunnable);
                     sendBroadcast(new Intent(ACTION_SONG_CHANGED).setPackage(getPackageName()));
-                    registerNoisyReceiver();
                     registerNoisyReceiver();
 
                 }
@@ -294,6 +310,9 @@ public class MusicService extends Service {
     }
 
     private void updateMetadata(Song song) {
+        if (song == null) {
+            return;
+        }
         MediaMetadataCompat metadata = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.getName())
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.getArtist())
@@ -304,6 +323,15 @@ public class MusicService extends Service {
     }
 
     private void updatePlaybackState(int state) {
+        if (player == null) {
+            return;
+        }
+        int currentPosition = 0;
+        try {
+            currentPosition = player.getCurrentPosition();
+        } catch (Exception e) {
+            Log.w("MusicService", "Current position is unavailable.");
+        }
         PlaybackStateCompat playbackState = new PlaybackStateCompat.Builder()
                 .setActions(
                         PlaybackStateCompat.ACTION_PLAY_PAUSE |
@@ -313,7 +341,7 @@ public class MusicService extends Service {
                                 PlaybackStateCompat.ACTION_PAUSE |
                                 PlaybackStateCompat.ACTION_SEEK_TO
                 )
-                .setState(state, player.getCurrentPosition(), 1.0f)
+                .setState(state, currentPosition, 1.0f)
                 .build();
         mediaSession.setPlaybackState(playbackState);
     }
@@ -322,7 +350,15 @@ public class MusicService extends Service {
         createNotificationChannel();
 
         Song currentSong = player.getSong();
-        int currentPosition = player.getCurrentPosition();
+        if (currentSong == null) {
+            return;
+        }
+        int currentPosition = 0;
+        try {
+            currentPosition = player.getCurrentPosition();
+        } catch (Exception e) {
+            Log.w("MusicService", "Current position is unavailable.");
+        }
         int duration = currentSong.getDuration();
 
         Intent playIntent = new Intent(this, MusicService.class);
@@ -394,5 +430,4 @@ public class MusicService extends Service {
         player.release();
         mediaSession.release();
     }
-
 }
